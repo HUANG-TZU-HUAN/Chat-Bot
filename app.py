@@ -1,11 +1,13 @@
 import os
 
+import google.generativeai as genai
 import requests
 from flask import Flask, abort, request
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
+model = genai.GenerativeModel('gemini-1.5-flash')
 app = Flask(__name__)
 
 # Line Bot 的 Channel Secret 和 Channel Access Token
@@ -41,15 +43,9 @@ def handle_message(event):
 
 def get_gemini_response(query):
     # 呼叫 Gemini API 取得回應
-    url = "https://api.gemini.com/v1/symbols"  # 範例 API endpoint, 需要替換為實際的 Gemini API
-    response = requests.get(url)
+    response = model.generate_content(query)
     
-    if response.status_code == 200:
-        data = response.json()
-        # 處理 API 回應資料，這裡只是一個範例
-        return f"Gemini API 回應: {data}"
-    else:
-        return "無法取得 Gemini API 資料"
 
+    return f"Gemini API 回應: {response.text}"
 if __name__ == "__main__":
     app.run(port=5000)
