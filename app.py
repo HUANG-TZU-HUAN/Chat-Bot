@@ -14,6 +14,7 @@ app = Flask(__name__)
 GEMINIAPIKEY = os.environ["GEMINIAPIKEY"]
 LINECHATBOT =  os.environ["LINECHATBOT"]
 CHANNELACCESSTOKEN = os.environ["CHANNELACCESSTOKEN"]
+genai.configure(api_key=GEMINIAPIKEY)
 line_bot_api = LineBotApi(CHANNELACCESSTOKEN)
 handler = WebhookHandler(LINECHATBOT)
 
