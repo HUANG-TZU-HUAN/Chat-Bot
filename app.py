@@ -31,33 +31,8 @@ model = genai.GenerativeModel(
     generation_config=generation_config
 )
 
-line_bot_api = LineBotApi(CHANNELACCESSTOKEN)
-handler = WebhookHandler(LINECHATBOT)
-
-@app.route("/callback", methods=['POST'])
-def callback():
-    signature = request.headers['X-Line-Signature']
-    body = request.get_data(as_text=True)
-    
-    try:
-        handler.handle(body, signature)
-    except InvalidSignatureError:
-        abort(400)
-    
-    return 'OK'
-
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    user_message = event.message.text
-    reply_message = get_gemini_response(user_message)
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_message)
-    )
-
-def get_gemini_response(query):
-  chat_session = model.start_chat(
-  history=[
+users_chat_session: dict[str, genai.ChatSession] = {}
+prompt = [
     {
       "role": "user",
       "parts": [
@@ -239,9 +214,39 @@ def get_gemini_response(query):
       ],
     },
   ]
-)
 
-  response = chat_session.send_message(query)
+line_bot_api = LineBotApi(CHANNELACCESSTOKEN)
+handler = WebhookHandler(LINECHATBOT)
+
+@app.route("/callback", methods=['POST'])
+def callback():
+    signature = request.headers['X-Line-Signature']
+    body = request.get_data(as_text=True)
+    
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+    
+    return 'OK'
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    user_message = event.message.text
+    user_id = event.source.user_id
+    reply_message = get_gemini_response(user_id, user_message)
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_message)
+    )
+    
+
+def get_gemini_response(user_id: str, query: str):
+  if user_id not in users_chat_session:
+    chat_session = model.start_chat(history=prompt)
+    users_chat_session[user_id] = chat_session
+
+  response = users_chat_session[user_id].send_message(query)
   return f" {response.text}"
 
 if __name__ == "__main__":
