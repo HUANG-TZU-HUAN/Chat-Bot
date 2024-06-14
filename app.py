@@ -56,8 +56,8 @@ def handle_message(event):
 
 def get_gemini_response(query):
     # 调用 Gemini API 获取响应
-    response = model.generate_content([query])
-    return f"Gemini API 回应: {response[0]['text']}"
+    response = model.generate_content(query)
+    return f"Gemini API 回应: {response.text}"
 
 if __name__ == "__main__":
     app.run(port=5000)
