@@ -4,9 +4,11 @@ import time
 
 import google.generativeai as genai
 from flask import Flask, abort, request
-from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.v3 import WebhookHandler
+from linebot.v3.exceptions import InvalidSignatureError
+from linebot.v3.messaging import (ApiClient, Configuration, MessagingApi,
+                                  ReplyMessageRequest, TextMessage)
+from linebot.v3.webhooks import MessageEvent, TextMessageContent
 
 app = Flask(__name__)
 num = random.randint(0,100)
@@ -276,30 +278,44 @@ prompt=[
     },
   ]
 
-line_bot_api = LineBotApi(CHANNELACCESSTOKEN)
 handler = WebhookHandler(LINECHATBOT)
+
+configuration = Configuration(
+    access_token=CHANNELACCESSTOKEN
+)
+
 
 @app.route("/callback", methods=['POST'])
 def callback():
+    # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
+
+    # get request body as text
     body = request.get_data(as_text=True)
-    
+    app.logger.info("Request body: " + body)
+
+    # handle webhook body
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400)
-    
+
     return 'OK'
 
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
+
+@handler.add(MessageEvent, message=TextMessageContent)
+def message_text(event):
     user_message = event.message.text
     user_id = event.source.user_id
     reply_message = get_gemini_response(user_id, user_message)
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_message)
-    )
+    with ApiClient(configuration) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.reply_message_with_http_info(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply_message)]
+            )
+        )
     
 
 def get_gemini_response(user_id: str, query: str):
