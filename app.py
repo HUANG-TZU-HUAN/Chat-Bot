@@ -1,4 +1,5 @@
 import os
+import random
 import time
 
 import google.generativeai as genai
@@ -8,7 +9,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
 app = Flask(__name__)
-
+num = random.randint(0,100)
 # 从环境变量中获取配置
 GEMINIAPIKEY = os.getenv("GEMINIAPIKEY")
 LINECHATBOT = os.getenv("LINECHATBOT")
@@ -237,7 +238,7 @@ def get_gemini_response(user_id: str, query: str):
 
   response = users_chat_session[user_id].send_message(query) 
 
-  return f"{len(users_chat_session[user_id].history)} {response.text}"
+  return f"{num} {len(users_chat_session[user_id].history)} {response.text}"
 
 if __name__ == "__main__":
     app.run(port=5000)
