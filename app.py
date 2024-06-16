@@ -1,6 +1,5 @@
 import os
 import random
-import time
 
 import google.generativeai as genai
 from flask import Flask, abort, request
