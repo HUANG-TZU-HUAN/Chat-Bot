@@ -235,9 +235,9 @@ def get_gemini_response(user_id: str, query: str):
     chat_session = model.start_chat(history=prompt)
     users_chat_session[user_id] = chat_session
 
-  response = users_chat_session[user_id].send_message(query)
-  print(user_id)
-  return f" {response.text}"
+  response = users_chat_session[user_id].send_message(query) 
+
+  return f"{len(users_chat_session[user_id].history)} {response.text}"
 
 if __name__ == "__main__":
     app.run(port=5000)
