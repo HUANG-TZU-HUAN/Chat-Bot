@@ -299,7 +299,7 @@ def get_gemini_response(user_id: str, query: str):
 
   response = users_chat_session[user_id].send_message(query) 
 
-  return f"{num} {response.text}"
+  return f" {response.text}"
 
 if __name__ == "__main__":
     app.run(port=5000)
