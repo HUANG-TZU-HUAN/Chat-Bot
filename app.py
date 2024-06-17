@@ -21,7 +21,7 @@ genai.configure(api_key=GEMINIAPIKEY)
 
 # 创建并配置生成式模型
 generation_config = {
-    "temperature": 0.5,
+    "temperature": 1.5,
     "top_p": 0.65,
     "top_k": 64,
     "max_output_tokens": 8192,
